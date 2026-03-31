@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>REPTO Sumô Objetos — EDUC Robótica Educacional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: #111; }
+    body { font-family: 'Nunito', sans-serif; color: #ddd; -webkit-tap-highlight-color: transparent; }
+
+    /* ── LAYOUT ── */
+    .game-layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      width: 268px;
+      min-width: 268px;
+      background: #2b2b2b;
+      border-right: 2px solid #3a3a3a;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* ── TABS ── */
+    .tab-row {
+      display: flex;
+      background: #1a1a1a;
+      border-bottom: 2px solid #222;
+    }
+    .tab {
+      flex: 1;
+      padding: 9px 4px;
+      background: #2b2b2b;
+      border: none;
+      border-right: 1px solid #1a1a1a;
+      color: #888;
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.2px;
+    }
+    .tab:last-child { border-right: none; }
+    .tab.active { background: #333; color: #fff; border-bottom: 2px solid #3A8FE8; }
+    .tab:hover:not(.active) { background: #323232; color: #bbb; }
+
+    /* ── SECTIONS ── */
+    .p-sec {
+      padding: 10px 12px;
+      border-bottom: 1px solid #363636;
+    }
+    .p-title {
+      font-size: 10.5px;
+      font-weight: 900;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 9px;
+    }
+
+    /* ── CMD BUTTONS ── */
+    .cmd-group { display: flex; flex-direction: column; gap: 6px; }
+    .cmd-row   { display: flex; align-items: center; gap: 7px; }
+
+    .cmd-btn {
+      width: 44px;
+      height: 38px;
+      border: none;
+      border-radius: 9px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.08s, box-shadow 0.08s;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+    .cmd-btn:active { transform: translateY(3px); box-shadow: 0 0 0 transparent !important; }
+    .cmd-btn.pf { background: #2A7EDD; box-shadow: 0 4px 0 #1A559A; }
+    .cmd-btn.pt { background: #D46A20; box-shadow: 0 4px 0 #924A14; }
+    .cmd-btn.pe { background: #8844BB; box-shadow: 0 4px 0 #5A2D80; }
+    .cmd-btn.pd { background: #1FAA50; box-shadow: 0 4px 0 #147034; }
+    .cmd-btn:disabled { filter: opacity(0.35) grayscale(0.6); cursor: not-allowed; pointer-events: none; }
+
+    /* ── TIME SPINNER ── */
+    .time-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 7px;
+      padding: 3px 7px;
+      gap: 3px;
+    }
+    .time-inp {
+      background: transparent;
+      border: none;
+      color: #e8e8e8;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 900;
+      width: 52px;
+      text-align: right;
+      outline: none;
+    }
+    .time-inp::-webkit-inner-spin-button { opacity: 0.7; cursor: pointer; }
+    .ms-lbl { color: #666; font-size: 11px; font-weight: 800; }
+
+    /* ── SEQUENCE ── */
+    .seq-list {
+      background: #1a1a1a;
+      border: 1.5px dashed #3a3a3a;
+      border-radius: 8px;
+      min-height: 68px;
+      max-height: 124px;
+      overflow-y: auto;
+      padding: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-content: flex-start;
+    }
+    .seq-empty {
+      width: 100%;
+      text-align: center;
+      color: #4a4a4a;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 16px 0;
+    }
+    .seq-chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.25;
+      text-align: center;
+      min-width: 38px;
+      transition: transform 0.15s, outline 0.1s;
+    }
+    .seq-chip.pf { background: #2A7EDD; }
+    .seq-chip.pt { background: #D46A20; }
+    .seq-chip.pe { background: #8844BB; }
+    .seq-chip.pd { background: #1FAA50; }
+    .seq-chip.active-chip { outline: 2.5px solid #fff; transform: scale(1.18); }
+    .seq-chip.done-chip   { filter: brightness(0.45); }
+
+    .seq-actions { display: flex; gap: 6px; margin-top: 7px; }
+    .seq-actions button {
+      flex: 1;
+      padding: 6px 4px;
+      background: #333;
+      border: 1px solid #404040;
+      border-radius: 7px;
+      color: #bbb;
+      font-family: 'Nunito', sans-serif;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .seq-actions button:hover { background: #3d3d3d; }
+    .seq-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── OBJECTS ── */
+    .obj-row { display: flex; align-items: center; gap: 8px; }
+    .obj-inp {
+      width: 58px;
+      background: #1a1a1a;
+      border: 1px solid #3a3a3a;
+      border-radius: 7px;
+      color: #e8e8e8;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 900;
+      padding: 5px 8px;
+      text-align: center;
+      outline: none;
+    }
+    .btn-ok {
+      background: #2A7EDD;
+      border: none;
+      border-radius: 7px;
+      color: #fff;
+      font-family: 'Fredoka One', cursive;
+      font-size: 14px;
+      padding: 5px 16px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #1A559A;
+      transition: transform 0.08s;
+    }
+    .btn-ok:active { transform: translateY(2px); box-shadow: 0 1px 0 #1A559A; }
+
+    /* ── CONTROL BUTTONS ── */
+    .ctrl-col { display: flex; flex-direction: column; gap: 7px; }
+
+    .btn-reiniciar {
+      background: #404040;
+      border: none;
+      border-radius: 9px;
+      color: #ddd;
+      font-family: 'Fredoka One', cursive;
+      font-size: 15px;
+      padding: 10px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #222;
+      transition: transform 0.08s;
+      width: 100%;
+    }
+    .btn-reiniciar:hover { background: #484848; }
+    .btn-reiniciar:active { transform: translateY(2px); box-shadow: 0 1px 0 #222; }
+
+    .btn-iniciar {
+      background: #1FAA50;
+      border: none;
+      border-radius: 9px;
+      color: #fff;
+      font-family: 'Fredoka One', cursive;
+      font-size: 16px;
+      padding: 11px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #147034;
+      transition: transform 0.08s, background 0.15s;
+      width: 100%;
+    }
+    .btn-iniciar:hover { background: #22BB58; }
+    .btn-iniciar.stop { background: #CC3333; box-shadow: 0 4px 0 #881818; }
+    .btn-iniciar:active { transform: translateY(3px); box-shadow: 0 1px 0; }
+    .btn-iniciar:disabled { background: #3a7a4a; cursor: not-allowed; box-shadow: 0 2px 0 #2a5a3a; }
+
+    .btn-opcoes {
+      margin: 8px 12px 10px;
+      background: #2b2b2b;
+      border: 1px solid #3a3a3a;
+      border-radius: 7px;
+      color: #888;
+      font-family: 'Nunito', sans-serif;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 6px;
+      cursor: pointer;
+      transition: background 0.12s;
+      width: calc(100% - 24px);
+    }
+    .btn-opcoes:hover { background: #333; color: #aaa; }
+
+    /* ── STATUS ── */
+    .status-chip {
+      background: #222;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #888;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .status-chip.run { color: #4A90D9; background: #0a1a2a; }
+    .status-chip.win { color: #27AE60; background: #0a1a0f; }
+
+    /* ── ARENA AREA ── */
+    .arena-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── TIMER BAR ── */
+    .timer-bar {
+      height: 36px;
+      background: #22CC22;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .timer-display {
+      font-family: 'Fredoka One', cursive;
+      font-size: 22px;
+      color: #0a2a0a;
+      letter-spacing: 3px;
+    }
+    .timer-count {
+      position: absolute;
+      right: 14px;
+      font-size: 12px;
+      font-weight: 900;
+      color: #0a3a0a;
+    }
+
+    /* ── CANVAS WRAP ── */
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1B6B1B;
+    }
+    #arena { display: block; }
+
+    /* ── BORDER STRIPS ── */
+    .strip { position: absolute; pointer-events: none; z-index: 2; }
+    .strip-l { left: 0; top: 0; bottom: 0; width: 13px; background: #BB00BB; }
+    .strip-r { right: 0; top: 0; bottom: 0; width: 13px; background: #CC1A1A; }
+    .strip-b { bottom: 0; left: 0; right: 0; height: 13px; background: #EE7700; }
+
+    /* ── WIN OVERLAY ── */
+    .win-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      backdrop-filter: blur(5px);
+    }
+    .win-overlay.hidden { display: none; }
+    .win-card {
+      background: #181818;
+      border: 3px solid #27AE60;
+      border-radius: 22px;
+      padding: 38px 44px 30px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(39,174,96,0.45);
+      animation: wPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    @keyframes wPop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .win-trophy  { font-size: 66px; }
+    .win-title   { font-family: 'Fredoka One', cursive; font-size: 34px; color: #27AE60; margin: 6px 0 4px; }
+    .win-sub     { font-size: 15px; color: #888; margin-bottom: 10px; }
+    .win-time    { font-family: 'Fredoka One', cursive; font-size: 26px; color: #F5C842; margin-bottom: 22px; }
+    .btn-win-replay {
+      background: #27AE60;
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Fredoka One', cursive;
+      font-size: 18px;
+      padding: 12px 36px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #1A7A42;
+      transition: transform 0.08s;
+    }
+    .btn-win-replay:active { transform: translateY(3px); box-shadow: 0 1px 0 #1A7A42; }
+
+    /* ── CONFETTI ── */
+    .cf-wrap { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+    .cf-piece {
+      position: absolute;
+      top: -12px;
+      border-radius: 3px;
+      animation: cfFall linear forwards;
+    }
+    @keyframes cfFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+    /* ── OPTIONS MODAL ── */
+    .opt-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 55; backdrop-filter: blur(4px);
+    }
+    .opt-overlay.hidden { display: none; }
+    .opt-card {
+      background: #1e1e1e;
+      border: 2px solid #3a3a3a;
+      border-radius: 18px;
+      padding: 26px 28px 22px;
+      min-width: 280px;
+      max-width: 90vw;
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
+      animation: wPop 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    .opt-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 20px; color: #ddd;
+      margin-bottom: 18px; text-align: center;
+    }
+    .opt-row {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #333;
+      font-size: 14px; font-weight: 800; color: #bbb;
+    }
+    .opt-row:last-of-type { border-bottom: none; }
+    .toggle-btn {
+      padding: 6px 14px;
+      border-radius: 8px; border: none;
+      font-family: 'Fredoka One', cursive;
+      font-size: 13px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .toggle-btn.on  { background: #1FAA50; color: #fff; box-shadow: 0 3px 0 #147034; }
+    .toggle-btn.off { background: #555;    color: #bbb; box-shadow: 0 3px 0 #333; }
+    .opt-close {
+      margin-top: 16px; width: 100%;
+      padding: 9px; border-radius: 9px; border: none;
+      background: #333; color: #ccc;
+      font-family: 'Fredoka One', cursive; font-size: 15px;
+      cursor: pointer; transition: background 0.12s;
+    }
+    .opt-close:hover { background: #3d3d3d; }
+
+    /* ── TABLET (landscape) ── */
+    @media (max-width: 900px) {
+      .panel { width: 230px; min-width: 230px; }
+    }
+
+    /* ── MOBILE (portrait & small screens) ── */
+    @media (max-width: 640px) {
+      .game-layout {
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+      }
+
+      /* Arena no topo (order 1), painel na base (order 2) */
+      .arena-area {
+        flex: 1;
+        min-height: 0;
+        order: 1;
+      }
+
+      /* Painel fica fixo na base, rolável verticalmente */
+      .panel {
+        order: 2;
+        width: 100%;
+        min-width: 0;
+        height: 48vh;
+        max-height: 360px;
+        min-height: 260px;
+        border-right: none;
+        border-top: 2px solid #3a3a3a;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      /* Impede que a seção de sequência expanda e esconda os botões abaixo */
+      .panel > :nth-child(3) {
+        flex: 0 0 auto !important;
+      }
+
+      /* Tabs full width */
+      .tab-row { width: 100%; flex-shrink: 0; }
+      .tab { padding: 8px 4px; font-size: 11px; }
+
+      /* Sections */
+      .p-sec { flex-shrink: 0; padding: 8px 12px; }
+
+      /* Sequência com altura limitada */
+      .seq-list { min-height: 44px; max-height: 60px; }
+
+      /* Botões de controle lado a lado */
+      .ctrl-col { flex-direction: row; gap: 6px; }
+      .btn-reiniciar { font-size: 14px; padding: 10px 6px; }
+      .btn-iniciar   { font-size: 14px; padding: 10px 6px; }
+
+      /* Botão Opções */
+      .btn-opcoes { margin: 6px 12px 8px; }
+
+      /* Status */
+      .status-chip { margin-top: 4px; font-size: 10.5px; }
+
+      /* Timer bar */
+      .timer-bar { height: 32px; }
+      .timer-display { font-size: 18px; }
+
+      /* Win card compacto */
+      .win-card { padding: 24px 20px 20px; border-radius: 16px; }
+      .win-trophy { font-size: 48px; }
+      .win-title  { font-size: 26px; }
+      .win-sub    { font-size: 13px; }
+      .win-time   { font-size: 20px; margin-bottom: 14px; }
+      .btn-win-replay { font-size: 16px; padding: 10px 28px; }
+    }
+
+    /* ── Very small phones (≤360px) ── */
+    @media (max-width: 360px) {
+      .panel { max-height: 320px; min-height: 240px; }
+      .cmd-btn { width: 38px; height: 34px; font-size: 14px; }
+      .btn-reiniciar, .btn-iniciar { font-size: 13px; }
+      .seq-list { max-height: 50px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-layout">
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="panel">
+
+    <div class="tab-row">
+      <button class="tab active" id="tab-0" onclick="switchModule(0)">Modulo1</button>
+      <button class="tab"        id="tab-1" onclick="switchModule(1)">Modulo2</button>
+      <button class="tab"        id="tab-2" onclick="switchModule(2)">Modulo3</button>
+    </div>
+
+    <!-- Time & Commands -->
+    <div class="p-sec">
+      <div class="p-title">Tempo em milisegundos</div>
+      <div class="cmd-group">
+        <div class="cmd-row">
+          <button class="cmd-btn pf" id="btn-pf" onclick="addCmd('PF')">PF</button>
+          <div class="time-wrap">
+            <input type="number" class="time-inp" id="pfpt-time" value="100" min="10" max="9000" step="10">
+            <span class="ms-lbl">ms</span>
+          </div>
+        </div>
+        <div class="cmd-row">
+          <button class="cmd-btn pt" id="btn-pt" onclick="addCmd('PT')">PT</button>
+        </div>
+        <div class="cmd-row">
+          <button class="cmd-btn pe" id="btn-pe" onclick="addCmd('PE')">PE</button>
+          <div class="time-wrap">
+            <input type="number" class="time-inp" id="pepd-time" value="80" min="10" max="9000" step="10">
+            <span class="ms-lbl">ms</span>
+          </div>
+          <button class="cmd-btn pd" id="btn-pd" onclick="addCmd('PD')">PD</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sequence -->
+    <div class="p-sec" style="flex:1;display:flex;flex-direction:column;">
+      <div class="p-title">Sequência <span id="seq-count" style="color:#3A8FE8;">(0)</span></div>
+      <div class="seq-list" id="seq-list">
+        <div class="seq-empty" id="seq-empty">Adicione blocos de comando!</div>
+      </div>
+      <div class="seq-actions">
+        <button id="btn-undo"  onclick="undoCmd()">↩ Desfazer</button>
+        <button id="btn-clear" onclick="clearCmds()">🗑 Limpar</button>
+      </div>
+      <div class="status-chip" id="status-chip">Pronto para programar!</div>
+    </div>
+
+    <!-- Objects -->
+    <div class="p-sec">
+      <div class="p-title">Quantos Objetos?</div>
+      <div class="obj-row">
+        <input type="number" class="obj-inp" id="num-obj" value="1" min="1" max="4">
+        <button class="btn-ok" onclick="applyNumObjects()">OK</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="p-sec">
+      <div class="ctrl-col">
+        <button class="btn-reiniciar" onclick="resetGame()">Reiniciar</button>
+        <button class="btn-iniciar" id="btn-iniciar" onclick="toggleStart()">Iniciar</button>
+      </div>
+    </div>
+
+    <button class="btn-opcoes" onclick="showOptions()">Opções</button>
+  </div>
+
+  <!-- ── ARENA AREA ── -->
+  <div class="arena-area">
+    <div class="timer-bar">
+      <span class="timer-display" id="timer-display">00:00:00</span>
+      <span class="timer-count" id="timer-count"></span>
+    </div>
+    <div class="canvas-wrap" id="canvas-wrap">
+      <div class="strip strip-l"></div>
+      <div class="strip strip-r"></div>
+      <div class="strip strip-b"></div>
+      <canvas id="arena"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div class="win-overlay hidden" id="win-overlay">
+  <div class="win-card">
+    <div class="win-trophy">🏆</div>
+    <div class="win-title">Parabéns!</div>
+    <div class="win-sub">Todos os objetos foram eliminados da arena!</div>
+    <div class="win-time" id="win-time">00:00:00</div>
+    <button class="btn-win-replay" onclick="resetGame()">Jogar Novamente 🔄</button>
+  </div>
+</div>
+
+<!-- Confetti container -->
+<div class="cf-wrap" id="cf-wrap"></div>
+
+<!-- Options modal -->
+<div class="opt-overlay hidden" id="opt-overlay">
+  <div class="opt-card">
+    <div class="opt-title">⚙️ Opções</div>
+    <div class="opt-row">
+      <span>Loop do programa</span>
+      <button class="toggle-btn on" id="btn-loop-toggle" onclick="toggleLoop()">ATIVADO</button>
+    </div>
+    <button class="opt-close" onclick="closeOptions()">Fechar</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
+const ROBOT_SPEED     = 145;  // px/s for PF / PT
+const ROBOT_ROT       = 205;  // deg/s for PE / PD
+const OBJ_R           = 19;   // object (ball) radius, px
+const ROBOT_R         = 26;   // robot collision radius, px
+const ROBOT_W         = 52;   // robot body width, px
+const ROBOT_H         = 37;   // robot body height, px
+const MAX_CMDS        = 24;   // max commands per module
+const COLORS = {
+  PF: '#2A7EDD', PT: '#D46A20', PE: '#8844BB', PD: '#1FAA50'
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const S = {
+  cx: 0, cy: 0, arenaR: 0,            // arena geometry (computed)
+  robot: { x: 0, y: 0, angle: -90 }, // angle in degrees (-90 = facing up)
+  objects:    [],                      // [{x,y,vx,vy,out}]
+  modules:    [[], [], []],            // 3 program modules
+  activeModule: 0,
+  running:    false,
+  won:        false,
+  cmdIdx:     0,
+  cmdElapsed: 0,                       // ms elapsed in current command
+  timerMs:    0,
+  numObjects: 1,
+  loopProgram: true,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CANVAS
+// ═══════════════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('arena');
+const ctx    = canvas.getContext('2d');
+
+function setupCanvas() {
+  const wrap = document.getElementById('canvas-wrap');
+  const W = Math.max(wrap.clientWidth  - 26, 200);
+  const H = Math.max(wrap.clientHeight - 13, 200);
+  canvas.width  = W;
+  canvas.height = H;
+  S.cx     = W / 2;
+  S.cy     = H / 2;
+  S.arenaR = Math.min(W, H) * 0.435;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT & RESET
+// ═══════════════════════════════════════════════════════════════════════════
+function init() {
+  setupCanvas();
+  resetGame();
+  requestAnimationFrame(loop);
+}
+
+function resetGame() {
+  const { cx, cy, arenaR: r } = S;
+  S.robot      = { x: cx, y: cy + r * 0.62, angle: -90 };
+  S.running    = false;
+  S.won        = false;
+  S.cmdIdx     = 0;
+  S.cmdElapsed = 0;
+  S.timerMs    = 0;
+  placeObjects();
+  document.getElementById('win-overlay').classList.add('hidden');
+  const btn = document.getElementById('btn-iniciar');
+  btn.textContent = 'Iniciar';
+  btn.classList.remove('stop');
+  updateTimerDisplay();
+  updateUI();
+  setStatus('Pronto para programar!', '');
+}
+
+function placeObjects() {
+  const { cx, cy, arenaR: r } = S;
+  const n = S.numObjects;
+  // Predefined positions for 1-4 objects (in arena upper zone)
+  const presets = [
+    [{x:0, y:-0.35}],
+    [{x:-0.24, y:-0.37}, {x:0.24, y:-0.37}],
+    [{x:0, y:-0.43}, {x:-0.30, y:-0.14}, {x:0.30, y:-0.14}],
+    [{x:-0.22, y:-0.40}, {x:0.22, y:-0.40}, {x:-0.22, y:-0.13}, {x:0.22, y:-0.13}],
+  ];
+  const pts = presets[Math.min(n, 4) - 1];
+  S.objects = pts.map(p => ({
+    x: cx + p.x * r, y: cy + p.y * r,
+    vx: 0, vy: 0, out: false
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMMANDS
+// ═══════════════════════════════════════════════════════════════════════════
+function addCmd(dir) {
+  if (S.running) return;
+  const cmds = S.modules[S.activeModule];
+  if (cmds.length >= MAX_CMDS) { setStatus('Limite de ' + MAX_CMDS + ' blocos atingido!', 'warn'); return; }
+  const pfptT = parseInt(document.getElementById('pfpt-time').value)  || 100;
+  const pepdT = parseInt(document.getElementById('pepd-time').value) || 80;
+  cmds.push({ cmd: dir, time: (dir === 'PF' || dir === 'PT') ? pfptT : pepdT });
+  renderSeq();
+  updateUI();
+  setStatus('Bloco ' + dir + ' adicionado. Total: ' + cmds.length, '');
+}
+
+function undoCmd() {
+  if (S.running) return;
+  S.modules[S.activeModule].pop();
+  renderSeq();
+  updateUI();
+}
+
+function clearCmds() {
+  if (S.running) return;
+  S.modules[S.activeModule] = [];
+  renderSeq();
+  updateUI();
+  setStatus('Sequência apagada.', '');
+}
+
+function switchModule(idx) {
+  S.activeModule = idx;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  renderSeq();
+  updateUI();
+}
+
+function applyNumObjects() {
+  const n = parseInt(document.getElementById('num-obj').value) || 1;
+  S.numObjects = Math.max(1, Math.min(4, n));
+  document.getElementById('num-obj').value = S.numObjects;
+  if (!S.running) placeObjects();
+}
+
+function toggleStart() {
+  if (S.won) return;
+  if (!S.running) {
+    const cmds = S.modules[S.activeModule];
+    if (cmds.length === 0) { setStatus('Adicione blocos de comando!', 'warn'); return; }
+    S.running    = true;
+    S.cmdIdx     = 0;
+    S.cmdElapsed = 0;
+    const btn = document.getElementById('btn-iniciar');
+    btn.textContent = 'Parar';
+    btn.classList.add('stop');
+    setStatus('Executando... 🤖', 'run');
+  } else {
+    S.running = false;
+    const btn = document.getElementById('btn-iniciar');
+    btn.textContent = 'Iniciar';
+    btn.classList.remove('stop');
+    setStatus('Parado. Ajuste e tente novamente!', '');
+  }
+  updateUI();
+}
+
+function showOptions() {
+  document.getElementById('opt-overlay').classList.remove('hidden');
+  const btn = document.getElementById('btn-loop-toggle');
+  btn.textContent = S.loopProgram ? 'ATIVADO' : 'DESATIVADO';
+  btn.className   = 'toggle-btn ' + (S.loopProgram ? 'on' : 'off');
+}
+
+function closeOptions() {
+  document.getElementById('opt-overlay').classList.add('hidden');
+}
+
+function toggleLoop() {
+  S.loopProgram = !S.loopProgram;
+  const btn = document.getElementById('btn-loop-toggle');
+  btn.textContent = S.loopProgram ? 'ATIVADO' : 'DESATIVADO';
+  btn.className   = 'toggle-btn ' + (S.loopProgram ? 'on' : 'off');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function renderSeq() {
+  const cmds  = S.modules[S.activeModule];
+  const list  = document.getElementById('seq-list');
+  const empty = document.getElementById('seq-empty');
+  const count = document.getElementById('seq-count');
+
+  count.textContent = '(' + cmds.length + ')';
+  list.querySelectorAll('.seq-chip').forEach(c => c.remove());
+
+  if (cmds.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const loopIdx = S.running ? S.cmdIdx % cmds.length : -1;
+
+  cmds.forEach((c, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'seq-chip ' + c.cmd.toLowerCase();
+    chip.id = 'chip-' + i;
+    chip.innerHTML = c.cmd + '<br><span style="font-size:9px;">' + c.time + '</span>';
+    if (S.running) {
+      if (i === loopIdx) chip.classList.add('active-chip');
+      else if (i < loopIdx) chip.classList.add('done-chip');
+    }
+    list.appendChild(chip);
+  });
+
+  // Scroll active chip into view
+  const active = list.querySelector('.active-chip');
+  if (active) active.scrollIntoView({ block: 'nearest' });
+}
+
+function setStatus(msg, type) {
+  const chip = document.getElementById('status-chip');
+  chip.textContent = msg;
+  chip.className = 'status-chip' + (type ? ' ' + type : '');
+}
+
+function updateUI() {
+  const running = S.running;
+  const hasCmds = S.modules[S.activeModule].length > 0;
+  ['btn-pf','btn-pt','btn-pe','btn-pd'].forEach(id => {
+    document.getElementById(id).disabled = running;
+  });
+  document.getElementById('btn-undo').disabled  = running || !hasCmds;
+  document.getElementById('btn-clear').disabled = running || !hasCmds;
+  document.getElementById('btn-iniciar').disabled = S.won;
+}
+
+function updateTimerDisplay() {
+  document.getElementById('timer-display').textContent = fmtTime(S.timerMs);
+  // Count remaining objects
+  const rem = S.objects.filter(o => !o.out).length;
+  const total = S.objects.length;
+  document.getElementById('timer-count').textContent =
+    total > 0 ? rem + '/' + total + ' obj.' : '';
+}
+
+function fmtTime(ms) {
+  const cs = Math.floor(ms / 10) % 100;
+  const s  = Math.floor(ms / 1000) % 60;
+  const m  = Math.floor(ms / 60000);
+  return p2(m) + ':' + p2(s) + ':' + p2(cs);
+}
+function p2(n) { return n < 10 ? '0' + n : '' + n; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GAME LOOP
+// ═══════════════════════════════════════════════════════════════════════════
+let lastTS = null;
+
+function loop(ts) {
+  if (!lastTS) lastTS = ts;
+  const dt = Math.min(ts - lastTS, 50);
+  lastTS = ts;
+
+  if (S.running && !S.won) update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PHYSICS UPDATE
+// ═══════════════════════════════════════════════════════════════════════════
+function update(dt) {
+  S.timerMs += dt;
+  updateTimerDisplay();
+
+  const cmds = S.modules[S.activeModule];
+  if (!cmds.length) return;
+
+  const loopIdx = S.cmdIdx % cmds.length;
+  const cmd = cmds[loopIdx];
+  const ang  = S.robot.angle * Math.PI / 180;
+  const dtS  = dt / 1000;
+
+  // Move robot
+  switch (cmd.cmd) {
+    case 'PF':
+      S.robot.x += Math.cos(ang) * ROBOT_SPEED * dtS;
+      S.robot.y += Math.sin(ang) * ROBOT_SPEED * dtS;
+      break;
+    case 'PT':
+      S.robot.x -= Math.cos(ang) * ROBOT_SPEED * dtS;
+      S.robot.y -= Math.sin(ang) * ROBOT_SPEED * dtS;
+      break;
+    case 'PE': S.robot.angle -= ROBOT_ROT * dtS; break;
+    case 'PD': S.robot.angle += ROBOT_ROT * dtS; break;
+  }
+
+  // Clamp robot to arena
+  const rx = S.robot.x - S.cx, ry = S.robot.y - S.cy;
+  const rd = Math.sqrt(rx*rx + ry*ry);
+  const maxR = S.arenaR - ROBOT_R;
+  if (rd > maxR) {
+    S.robot.x = S.cx + (rx / rd) * maxR;
+    S.robot.y = S.cy + (ry / rd) * maxR;
+  }
+
+  // Robot linear velocity (for impulse)
+  let rvx = 0, rvy = 0;
+  if (cmd.cmd === 'PF') { rvx = Math.cos(ang) * ROBOT_SPEED; rvy = Math.sin(ang) * ROBOT_SPEED; }
+  if (cmd.cmd === 'PT') { rvx = -Math.cos(ang) * ROBOT_SPEED; rvy = -Math.sin(ang) * ROBOT_SPEED; }
+
+  // Friction coefficient per frame
+  const fric = Math.pow(0.88, dt / 16.67);
+
+  S.objects.forEach((obj, oi) => {
+    if (obj.out) {
+      // Keep sliding after exit
+      obj.x += obj.vx * dtS;
+      obj.y += obj.vy * dtS;
+      obj.vx *= fric;
+      obj.vy *= fric;
+      return;
+    }
+
+    // Apply velocity + friction
+    obj.x += obj.vx * dtS;
+    obj.y += obj.vy * dtS;
+    obj.vx *= fric;
+    obj.vy *= fric;
+
+    // Robot ↔ object collision
+    const dx = obj.x - S.robot.x, dy = obj.y - S.robot.y;
+    const d  = Math.sqrt(dx*dx + dy*dy);
+    const minD = ROBOT_R + OBJ_R;
+    if (d < minD && d > 0.01) {
+      const nx = dx/d, ny = dy/d;
+      const pen = minD - d;
+      const relV = (rvx - obj.vx) * nx + (rvy - obj.vy) * ny;
+      const impulse = Math.max(relV * 0.9, 0) + pen * 4.5;
+      obj.vx += nx * impulse;
+      obj.vy += ny * impulse;
+      // Positional correction
+      obj.x += nx * pen * 0.55;
+      obj.y += ny * pen * 0.55;
+    }
+
+    // Object ↔ object collision
+    S.objects.forEach((other, oj) => {
+      if (oj <= oi || other.out) return;
+      const ox = obj.x - other.x, oy = obj.y - other.y;
+      const od = Math.sqrt(ox*ox + oy*oy);
+      const minOD = OBJ_R * 2.1;
+      if (od < minOD && od > 0.01) {
+        const pen = minOD - od;
+        const nx = ox/od, ny = oy/od;
+        obj.x   += nx * pen * 0.5;   obj.y   += ny * pen * 0.5;
+        other.x -= nx * pen * 0.5;   other.y -= ny * pen * 0.5;
+        const relV = (obj.vx - other.vx)*nx + (obj.vy - other.vy)*ny;
+        if (relV < 0) {
+          const imp = relV * 0.75;
+          obj.vx   -= nx * imp;   obj.vy   -= ny * imp;
+          other.vx += nx * imp;   other.vy += ny * imp;
+        }
+      }
+    });
+
+    // Out-of-arena check
+    const odx = obj.x - S.cx, ody = obj.y - S.cy;
+    if (Math.sqrt(odx*odx + ody*ody) > S.arenaR - 1) {
+      obj.out = true;
+    }
+  });
+
+  // Advance command timer
+  S.cmdElapsed += dt;
+  if (S.cmdElapsed >= cmd.time) {
+    S.cmdElapsed -= cmd.time;
+    S.cmdIdx++;
+    // Loop check
+    if (!S.loopProgram && S.cmdIdx >= cmds.length) {
+      S.running = false;
+      document.getElementById('btn-iniciar').textContent = 'Iniciar';
+      document.getElementById('btn-iniciar').classList.remove('stop');
+      setStatus('Sequência concluída!', '');
+      updateUI();
+    }
+    renderSeq();
+  }
+
+  // Win condition
+  if (S.objects.length > 0 && S.objects.every(o => o.out)) {
+    S.won     = true;
+    S.running = false;
+    document.getElementById('btn-iniciar').textContent = 'Iniciar';
+    document.getElementById('btn-iniciar').classList.remove('stop');
+    document.getElementById('win-time').textContent = '⏱ ' + fmtTime(S.timerMs);
+    setStatus('VITÓRIA! 🏆 Tempo: ' + fmtTime(S.timerMs), 'win');
+    updateUI();
+    setTimeout(() => {
+      document.getElementById('win-overlay').classList.remove('hidden');
+      launchConfetti();
+    }, 500);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════════════
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBg();
+  drawArenaCircle();
+  drawPuzzleCross();
+  drawEDUCLogos();
+  S.objects.forEach(drawObject);
+  drawRobot();
+  drawArenaRing();
+}
+
+function drawBg() {
+  ctx.fillStyle = '#1B6B1B';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawArenaCircle() {
+  const { cx, cy, arenaR: r } = S;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPuzzleCross() {
+  const { cx, cy, arenaR: r } = S;
+  const NR = r * 0.087;
+  const NP = r * 0.44;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
+  ctx.clip();
+
+  ctx.strokeStyle = '#C4C4C4';
+  ctx.lineWidth   = 1.5;
+
+  // Left half horizontal — nub DOWN
+  ctx.beginPath();
+  ctx.moveTo(cx - r, cy);
+  ctx.lineTo(cx - NP - NR, cy);
+  ctx.arc(cx - NP, cy, NR, Math.PI, 0, true);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+
+  // Right half horizontal — nub UP
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + NP - NR, cy);
+  ctx.arc(cx + NP, cy, NR, Math.PI, 0, false);
+  ctx.lineTo(cx + r, cy);
+  ctx.stroke();
+
+  // Top half vertical — nub RIGHT
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx, cy - NP - NR);
+  ctx.arc(cx, cy - NP, NR, -Math.PI/2, Math.PI/2, false);
+  ctx.lineTo(cx, cy);
+  ctx.stroke();
+
+  // Bottom half vertical — nub LEFT
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx, cy + NP - NR);
+  ctx.arc(cx, cy + NP, NR, -Math.PI/2, Math.PI/2, true);
+  ctx.lineTo(cx, cy + r);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawEDUCLogos() {
+  const { cx, cy, arenaR: r } = S;
+  // 4 diagonal positions (inside each quadrant)
+  const spots = [
+    { x: cx - r * 0.50, y: cy - r * 0.50, a: -45 },
+    { x: cx + r * 0.50, y: cy - r * 0.50, a:  45 },
+    { x: cx - r * 0.50, y: cy + r * 0.50, a:  225 },
+    { x: cx + r * 0.50, y: cy + r * 0.50, a:  135 },
+  ];
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+  ctx.clip();
+
+  spots.forEach(sp => {
+    ctx.save();
+    ctx.translate(sp.x, sp.y);
+    ctx.rotate(sp.a * Math.PI / 180);
+
+    // EJR logo badge (rounded rect)
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    const bw = r * 0.32, bh = r * 0.16;
+    rrect(ctx, -bw/2, -bh/2, bw, bh, 5);
+    ctx.fill();
+
+    // Text
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.font = `900 ${r * 0.090}px 'Fredoka One', cursive`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('EDUC', 0, -r * 0.025);
+    ctx.font = `bold ${r * 0.034}px 'Nunito', sans-serif`;
+    ctx.fillText('ROBÓTICA EDUCACIONAL', 0, r * 0.062);
+
+    // Small gear / cog icons at corners (simplified circles)
+    const gp = bw * 0.42, gr = r * 0.028;
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx, sy]) => {
+      ctx.beginPath();
+      ctx.arc(sx * gp * 0.5, sy * bh * 0.38, gr, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.10)';
+      ctx.fill();
+    });
+
+    ctx.restore();
+  });
+
+  ctx.restore();
+}
+
+function drawObject(obj) {
+  ctx.save();
+  if (obj.out) ctx.globalAlpha = 0.35;
+
+  const r = OBJ_R;
+  // Glow
+  if (!obj.out) {
+    ctx.shadowColor = 'rgba(0,150,255,0.6)';
+    ctx.shadowBlur  = 10;
+  }
+
+  // Radial gradient (shiny sphere look)
+  const grd = ctx.createRadialGradient(
+    obj.x - r * 0.32, obj.y - r * 0.35, r * 0.05,
+    obj.x, obj.y, r
+  );
+  grd.addColorStop(0,   '#88EEFF');
+  grd.addColorStop(0.45,'#00B4F0');
+  grd.addColorStop(1,   '#005AAA');
+
+  ctx.beginPath();
+  ctx.arc(obj.x, obj.y, r, 0, Math.PI * 2);
+  ctx.fillStyle = grd;
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  // Specular highlight
+  ctx.beginPath();
+  ctx.arc(obj.x - r * 0.28, obj.y - r * 0.32, r * 0.26, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fill();
+
+  ctx.restore();
+
+  // "FORA!" badge
+  if (obj.out) {
+    ctx.save();
+    ctx.font = 'bold 11px "Fredoka One", cursive';
+    ctx.fillStyle = '#FF4444';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('FORA!', obj.x, obj.y - r - 9);
+    ctx.restore();
+  }
+}
+
+function drawRobot() {
+  const { robot } = S;
+  const ang = robot.angle * Math.PI / 180;
+
+  ctx.save();
+  ctx.translate(robot.x, robot.y);
+  ctx.rotate(ang);
+
+  const W = ROBOT_W, H = ROBOT_H;
+  const ww = 9, wh = 14; // wheel dimensions
+
+  // Drop shadow
+  ctx.shadowColor   = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur    = 12;
+  ctx.shadowOffsetY = 4;
+
+  // Wheels
+  ctx.fillStyle = '#111';
+  ctx.fillRect(-W/2 - ww + 2, -H/2,          ww, wh);
+  ctx.fillRect(-W/2 - ww + 2,  H/2 - wh,     ww, wh);
+  ctx.fillRect( W/2 - 2,      -H/2,           ww, wh);
+  ctx.fillRect( W/2 - 2,       H/2 - wh,      ww, wh);
+
+  // Wheel highlights
+  ctx.fillStyle = '#333';
+  ctx.fillRect(-W/2 - ww + 4, -H/2 + 3, ww - 4, 2);
+  ctx.fillRect(-W/2 - ww + 4,  H/2 - wh + 3, ww - 4, 2);
+  ctx.fillRect( W/2,          -H/2 + 3, ww - 4, 2);
+  ctx.fillRect( W/2,           H/2 - wh + 3, ww - 4, 2);
+
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur  = 0;
+
+  // Body
+  ctx.fillStyle = '#1A1A30';
+  rrect(ctx, -W/2, -H/2, W, H, 5);
+  ctx.fill();
+
+  // Front bumper (blue bar)
+  ctx.fillStyle = '#1E68E8';
+  rrect(ctx, W/2 - 6, -H/2, 12, H, [0, 5, 5, 0]);
+  ctx.fill();
+
+  // PCB board
+  ctx.fillStyle = '#112211';
+  ctx.fillRect(-W/2 + 5, -H/2 + 5, W - 15, H - 10);
+
+  // PCB traces
+  ctx.strokeStyle = '#1E441E';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-W/2 + 10, 0); ctx.lineTo(W/2 - 12, 0);
+  ctx.moveTo(-10, -H/2 + 7); ctx.lineTo(-10, H/2 - 7);
+  ctx.stroke();
+
+  // Components
+  // Center component (red)
+  ctx.fillStyle = '#FF2222';
+  ctx.fillRect(-6, -5, 12, 10);
+  ctx.fillStyle = '#CC0000';
+  ctx.fillRect(-5, -4, 10, 8);
+  ctx.fillStyle = '#FF6666';
+  ctx.fillRect(-4, -2, 3, 4);
+
+  // Left component (yellow)
+  ctx.fillStyle = '#EEC400';
+  ctx.fillRect(-W/2 + 7, -4, 8, 8);
+
+  // Right component (green)
+  ctx.fillStyle = '#22BB22';
+  ctx.fillRect(W/2 - 22, -4, 8, 8);
+
+  // Magenta connector at bottom
+  ctx.fillStyle = '#DD00AA';
+  ctx.fillRect(-5, H/2 - 10, 10, 7);
+
+  // Sensor eyes (orange LEDs)
+  [-H/4, H/4].forEach(ey => {
+    // Outer glow
+    ctx.beginPath();
+    ctx.arc(W/2 - 3, ey, 6.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 90, 0, 0.35)';
+    ctx.fill();
+    // Inner LED
+    ctx.beginPath();
+    ctx.arc(W/2 - 3, ey, 3.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#FF6600';
+    ctx.fill();
+    // Specular
+    ctx.beginPath();
+    ctx.arc(W/2 - 4.2, ey - 1.2, 1.3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fill();
+  });
+
+  // Direction arrow (front indicator)
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.moveTo(W/2 + 5, 0);
+  ctx.lineTo(W/2 - 1, -5);
+  ctx.lineTo(W/2 - 1, 5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawArenaRing() {
+  const { cx, cy, arenaR: r } = S;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = '#BBBBBB';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+}
+
+// ─── Rounded rect helper (cross-browser) ──────────────────────────────────
+function rrect(ctx, x, y, w, h, radii) {
+  if (typeof radii === 'number') radii = [radii, radii, radii, radii];
+  const [tl, tr, br, bl] = radii;
+  ctx.beginPath();
+  ctx.moveTo(x + tl, y);
+  ctx.lineTo(x + w - tr, y);
+  ctx.quadraticCurveTo(x + w, y,     x + w,     y + tr);
+  ctx.lineTo(x + w, y + h - br);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+  ctx.lineTo(x + bl, y + h);
+  ctx.quadraticCurveTo(x,     y + h, x,          y + h - bl);
+  ctx.lineTo(x, y + tl);
+  ctx.quadraticCurveTo(x, y,         x + tl,    y);
+  ctx.closePath();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFETTI
+// ═══════════════════════════════════════════════════════════════════════════
+function launchConfetti() {
+  const wrap = document.getElementById('cf-wrap');
+  const CLR  = ['#F5C842','#3A8FE8','#27AE60','#8844BB','#D46A20','#FF5555','#44DDCC'];
+  for (let i = 0; i < 70; i++) {
+    const el = document.createElement('div');
+    el.className = 'cf-piece';
+    el.style.left             = Math.random() * 100 + 'vw';
+    el.style.width            = (7 + Math.random() * 9) + 'px';
+    el.style.height           = (9 + Math.random() * 12) + 'px';
+    el.style.background       = CLR[Math.floor(Math.random() * CLR.length)];
+    el.style.borderRadius     = Math.random() > 0.5 ? '50%' : '3px';
+    el.style.animationDuration= (1.6 + Math.random() * 2.2) + 's';
+    el.style.animationDelay   = (Math.random() * 0.5) + 's';
+    wrap.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESPONSIVE RESIZE — ResizeObserver garante canvas sempre correto
+// ═══════════════════════════════════════════════════════════════════════════
+let roInitialized = false;
+const canvasWrap = document.getElementById('canvas-wrap');
+
+const resizeObserver = new ResizeObserver(() => {
+  setupCanvas();
+  if (!S.running) {
+    S.robot.x = S.cx;
+    S.robot.y = S.cy + S.arenaR * 0.62;
+    placeObjects();
+  }
+});
+resizeObserver.observe(canvasWrap);
+
+// Fallback para navegadores sem ResizeObserver
+window.addEventListener('resize', () => {
+  setupCanvas();
+  if (!S.running) {
+    S.robot.x = S.cx;
+    S.robot.y = S.cy + S.arenaR * 0.62;
+    placeObjects();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// START — pequeno delay garante layout calculado antes do canvas
+// ═══════════════════════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  // requestAnimationFrame garante que o layout flex já foi calculado
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      init();
+    });
+  });
+});
+</script>
+</body>
+</html>
