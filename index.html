@@ -12,7 +12,10 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; background: #111; }
-    body { font-family: 'Nunito', sans-serif; color: #ddd; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; color: #ddd; -webkit-tap-highlight-color: transparent; 
+         filter: grayscale(100%);
+         pointer-events: none; /* desativa cliques */
+         user-select: none; /* impede seleção de texto */}
 
     /* ── LAYOUT ── */
     .game-layout {
@@ -384,7 +387,11 @@
   </style>
 </head>
 <body>
-
+  
+<div class="overlay">
+🚧 Em desenvolvimento 🚧
+</div>
+  
 <div class="game-layout">
 
   <!-- ── LEFT PANEL ── -->
